@@ -1,6 +1,6 @@
 import './style.css'
-
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const scene = new THREE.Scene();
 
@@ -19,21 +19,60 @@ renderer.render( scene, camera );
 
 //torus shape
 const geometry = new THREE.TorusGeometry( 10, 3, 16, 100 );
-const material = new THREE.MeshBasicMaterial( { color: 0xff6347, wireframe: true } );
+const material = new THREE.MeshStandardMaterial( { color: 0xff6347 } );
 const torus = new THREE.Mesh( geometry, material );
 
 scene.add(torus);
 
-function animate() {
-  requestAnimationFrame( animate );
-  renderer.render( scene, camera );
+// lights
+const pointLight = new THREE.PointLight(0xffffff);
+pointLight.position.set(5,5,5);
+
+const ambientLight = new THREE.AmbientLight(0xffffff);
+
+scene.add(pointLight, ambientLight);
+
+const gridHelper = new THREE.GridHelper(200, 50);
+scene.add(gridHelper)
+
+const controls = new OrbitControls(camera, renderer.domElement);
+
+function addStar() {
+  const geometry = new THREE.SphereGeometry(0.25, 24, 24);
+  const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+  const star = new THREE.Mesh( geometry, material )
+
+  const [x, y, z] = Array(3).fill().map(() => THREE.MathUtils.randFloatSpread( 100 ));
+
+  star.position.set(x, y, z);
+  scene.add( star );
 }
 
-animate()
+Array(200).fill().forEach(addStar);
 
+const spaceTexture = new THREE.TextureLoader().load('background.jpg');
+scene.background = spaceTexture;
 
+const juanTexture = new THREE.TextureLoader().load('me.jpg');
+const juan = new THREE.Mesh(
+  new THREE.BoxGeometry(3,3,3),
+  new THREE.MeshBasicMaterial({map: juanTexture})
+);
 
+scene.add(juan);
 
+const moonTexture = new THREE.TextureLoader().load('moon.jpg');
+const normalTexture = new THREE.TextureLoader().load('normal.jpg');
+
+const moon = new THREE.Mesh(
+  new THREE.SphereGeometry(3, 32, 32),
+  new THREE.MeshStandardMaterial({
+    map: moonTexture,
+    normalMap: normalTexture,
+  })
+);
+
+scene.add(moon);
 
 // const loader = new THREE.FontLoader();
 
@@ -52,5 +91,25 @@ animate()
 //   const material = new THREE.MeshBasicMaterial( { color: 0xff6347 } );
 //   const myName = new THREE.Mesh( geometry, material );
 //   scene.add(myName);
-//   renderer.render( scene, camera )
 // });
+
+// scene.add(loader)
+
+function animate() {
+  requestAnimationFrame( animate );
+
+  torus.rotation.x += 0.01;
+  torus.rotation.y += 0.005;
+  torus.rotation.z += 0.01;
+
+  controls.update();
+
+  renderer.render( scene, camera );
+}
+
+animate()
+
+
+
+
+
